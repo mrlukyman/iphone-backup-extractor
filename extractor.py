@@ -2,8 +2,8 @@ import os
 from pathlib import Path
 from iOSbackup import iOSbackup
 from simple_term_menu import TerminalMenu
+dynamicPath = Path('') # change this to your desired path
 
-dynamicPath = Path('/Users/lukasharing/Desktop/extracted_photos/') # change this to your desired path
 destination = str(dynamicPath)
 backupName = ''
 
