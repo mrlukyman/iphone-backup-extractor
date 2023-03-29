@@ -1,30 +1,108 @@
-import iOSbackup
+import os
+from pathlib import Path
+from iOSbackup import iOSbackup
+from simple_term_menu import TerminalMenu
 
-backup_folder = "~/Library/Application Support/MobileSync/Backup" # backup folder (macOs)
+dynamicPath = Path('/Users/lukasharing/Desktop/extracted_photos/') # change this to your desired path
+destination = str(dynamicPath)
+backupName = ''
 
-destination = '' # destination folder
-
-backups = iOSbackup.iOSbackup.getDeviceList()
-print("Available backups:")
-
-for i in range(len(backups)):
-  if backups[i] == None:
-    print(str(i) + " - " + "No backup")
+def slectBackup():
+  backups = iOSbackup.getDeviceList()
+  options = []
+  udids = []
+  if backups:
+    global backupName
+    for i in range(len(backups)):
+      if backups[i] == None:
+        options.append(None)
+      else:
+        options.append(backups[i]['name'] + " - " + backups[i]['udid'])
+        udids.append(backups[i]['udid'])
+        backupName = backups[i]['name']
+    terminalMenu = TerminalMenu(options)
+    menuEntryIndex = terminalMenu.show()
+    print(f"You have selected {options[menuEntryIndex]}!")
+    return udids[menuEntryIndex]
   else:
-    print(str(i) + " - " + backups[i]['name'] + " - " + backups[i]['udid'])
+    print("No backups found :(")
+    return None
 
-backup_id = int(input("Select a backup: "))
+def domainsToExtract():
+  options = ['WirelessDomain', 'HomeDomain', 'CameraRollDomain', 'MediaDomain']
+  selectedOptions = []
+  terminalMenu = TerminalMenu(
+    options, 
+    multi_select=True,
+    show_multi_select_hint=True
+  )
+  menuEntryIndex = terminalMenu.show()
+  for i in menuEntryIndex:
+    selectedOptions.append(options[i])
+  return selectedOptions
 
-udid = backups[backup_id]['udid']
+def getListOfBackedUpFiles(backup):
+  global loading
+  fileList = backup.getBackupFilesList()
+  loading = False
+  return fileList 
 
-backup = iOSbackup.iOSbackup(
-  udid=udid
-)
+def extractWirelessDomain(backup):
+  backup.getFolderDecryptedCopy(
+    'Library',
+    targetFolder=destination+backupName,
+    includeDomains='WirelessDomain',
+  )
 
-# extract backup photos
-# change arguments to extract domains you want
-backup.getFolderDecryptedCopy(
-	'Media',
-	targetFolder=destination,
-	includeDomains='CameraRollDomain',
-)
+def extractHomeDomain(backup):
+  backup.getFolderDecryptedCopy(
+    'Library',
+    targetFolder=destination+backupName,
+    includeDomains='HomeDomain',
+  )
+
+def extractCameraRollDomain(backup):
+  backup.getFolderDecryptedCopy(
+    'Media',
+    targetFolder=destination+backupName,
+    includeDomains='CameraRollDomain',
+  )
+
+def extractMediaDomain(backup):
+  backup.getFolderDecryptedCopy(
+    'Library',
+    targetFolder=destination+backupName,
+    includeDomains='MediaDomain',
+  )
+
+def extract(backup):
+  for domain in selectedDomains:
+    if domain == 'WirelessDomain':
+      extractWirelessDomain(backup)
+    elif domain == 'HomeDomain':
+      extractHomeDomain(backup)
+    elif domain == 'CameraRollDomain':
+      extractCameraRollDomain(backup)
+    elif domain == 'MediaDomain':
+      extractMediaDomain(backup)
+    else:
+      print(f"Domain {domain} not supported yet")
+
+udid = slectBackup()
+domains = []
+
+if udid:
+  backup = iOSbackup(
+    udid=udid
+  )
+  selectedDomains = domainsToExtract()
+  if selectedDomains:
+    if os.path.exists(destination+backupName):
+      extract(backup)
+    else:
+      os.mkdir(destination+backupName)
+      extract(backup)
+  else:
+    print("No domains selected")
+else:
+  print("No backups found")
