@@ -1,4 +1,5 @@
 # iphone-backup-extractor
+[![MIT-LICENCE](https://img.shields.io/github/license/mrlukyman/iphone-backup-extractor?style=flat-square)](https://github.com/mrlukyman/iphone-backup-extractor/blob/main/LICENSE)
 
 The extractor works for extracting all domains in iOS backups. Please keep in mind that this is just a simple implementation of the iOSbackup library and I do not take any reponsibility for the loss of your data (though I tested it multiple times and I didn't experience any data loss).
 
